@@ -1,55 +1,56 @@
+English| [简体中文](./README_cn.md)
+
 # Getting Started with Mipi_Cam Node
 ---
 # Intro
 ---
-通过阅读本文档，用户可以在地平线X3开发板上轻松抓取mipi摄像头的视频流数据，并通过ROS平台发布满足ROS标准的图片数据，供其他ROS Node订阅获取。目前支持F37、IMX415、GC4663、IMX219、IMX477、OV5647等mipi标准设备。
-Mipi_cam Node package是地平线机器人开发平台的一部分，基于地平线VIO和ROS2 Node进行二次开发，为应用开发提供简单易用的摄像头数据采集功能的功能，避免重复开发获取视频的工作。支持 share mem 方式发布。
+By reading this document, users can easily capture video streaming data from mipi camera on Horizon X3 development board, and publish image data that meets ROS standards through the ROS platform for other ROS Nodes to subscribe. Currently supported mipi standard devices include F37, IMX415, GC4663, IMX219, IMX477, OV5647, etc.
+Mipi_cam Node package is part of Horizon Robotics Robot Development Platform, based on Horizon VIO and ROS2 Node for secondary development, providing simple and easy-to-use camera data acquisition functions for application development, avoiding repetitive work of acquiring video. Support for publishing via shared mem.
 
 # Build
 ---
 ## Dependency
 
-依赖库：
-ros package：
+Dependencies:
+ros package:
 - sensor_msgs
 - hbm_img_msgs
 
-hbm_img_msgs pkg是在hobot_msgs中自定义的图片消息格式，用于shared mem场景下的图片传输。
+The hbm_img_msgs package is a custom image message format defined in hobot_msgs, used for image transmission in shared mem scenarios.
 
-## 开发环境
-- 编程语言：C/C++
-- 开发平台：X3/X86
-- 系统版本：Ubuntu 20.04
-- 编译工具链：Linux GCC 9.3.0/Linaro GCC 9.3.0
-## package说明
+## Development Environment
+- Programming Language: C/C++
+- Development Platform: X3/X86
+- System Version: Ubuntu 20.04
+- Compilation Toolchain: Linux GCC 9.3.0/Linaro GCC 9.3.0
+## Package Description
 ---
-源码包含mipi_cam package。mipi_cam 编译完成后，头文件、动态库以及依赖安装在install/mipi_cam 路径。
+The source code includes the mipi_cam package. After compilation of mipi_cam is completed, header files, dynamic libraries, and dependencies are installed in the install/mipi_cam path.
 
-## 编译
-支持在X3 Ubuntu系统上编译和在PC上使用docker交叉编译两种方式，并支持通过编译选项控制编译pkg的依赖和pkg的功能。
+## Compilation
+Supports compilation on X3 Ubuntu system and cross-compilation using docker on PC, and supports controlling the dependencies and functionality of compiling pkg through compilation options.
 
-### X3 Ubuntu系统上编译
-1、编译环境确认
+### Compilation on X3 Ubuntu System
+1. Confirmation of compilation environment
 
-- 板端已安装X3 Ubuntu系统。
-- 当前编译终端已设置TogetherROS环境变量：`source PATH/setup.bash`。其中PATH为TogetherROS的安装路径。
-- 已安装ROS2编译工具colcon，安装命令：`pip install -U colcon-common-extensions`
-- 已依赖pkg ，详见 Dependency 部分
+- X3 Ubuntu system is installed on the board.
+- The current compilation terminal has set the TogetherROS environment variable: `source PATH/setup.bash`. Where PATH is the installation path of TogetherROS.
+- ROS2 compilation tool colcon is installed, installation command: `pip install -U colcon-common-extensions`
+- Dependencies are installed, see Dependency section for details
 
-2、编译：
-  `colcon build --packages-select mipi_cam`。
+2. Compilation:
+  `colcon build --packages-select mipi_cam`.
 
 
-### docker交叉编译
+### Cross-Compilation using Docker
 
-1、编译环境确认
+1. Confirmation of compilation environment
 
-- 在docker中编译，并且docker中已经安装好tros。docker安装、交叉编译说明、tros编译和部署说明详见机器人开发平台robot_dev_config repo中的README.md。
-- 已编译hbm_img_msgs package（编译方法见Dependency部分）
+- Compilation in docker, and tros is already installed in docker. For docker installation, cross-compilation instructions, tros compilation and deployment instructions, please refer to the README.md in the robot development platform robot_dev_config repository.
+- The hbm_img_msgs package has been compiled (compilation method see Dependency section).
 
-2、编译
-
-- 编译命令： 
+2. Compilation
+- Compilation command:
 
   ```
   export TARGET_ARCH=aarch64
@@ -69,97 +70,97 @@ hbm_img_msgs pkg是在hobot_msgs中自定义的图片消息格式，用于shared
 
 
 # Usage
-## X3 Ubuntu系统
+## X3 Ubuntu System
 
-运行方式1，用户直接调用ros2 命令启动即可：
+To run, users can directly use the ros2 command:
 
 ```
 export COLCON_CURRENT_PREFIX=./install
 source ./install/setup.bash
-# 默认F37 sensor
+# Default F37 sensor
 ros2 run mipi_cam mipi_cam
 ```
 
-打开了shared mem通信方式，只支持发布 hbmem_img 主题的图片。   
+When using the shared memory communication method, only publishing images of the 'hbmem_img' topic is supported.
 
-node会发布/image_raw topic，对应rgb8格式图片，使用 share mem 发布主题：hbmem_img。相机内参发布话题：/camera_info。
+The node will publish on the '/image_raw' topic with images in rgb8 format and publish the 'hbmem_img' topic using shared memory. Camera intrinsic parameters are published on the '/camera_info' topic.
 
-利用 rqt_image_view 可以查看发布的图片主题，也可以用图片消费节点。例如：这个repo下的example去直接获取图片进行推理等应用。
+One can use 'rqt_image_view' to view the published image topic, as well as use image consumer nodes. For example, one can directly obtain images for inference and other applications using the examples in this repository.
 
-可以设置使用的sensor，发布图片的编码方式和分辨率。
+You can configure the sensor to use, the encoding method, and the resolution for publishing images.
 
-使用video_device参数设置使用的sensor。目前支持 F37（默认），IMX415（通过--ros-args -p video_device:=IMX415设置），F37 默认分辨率是1920x1080；IMX415 是3840x2160。
+Use the 'video_device' parameter to set the sensor to use. Currently, F37 (default) and IMX415 are supported (set through `--ros-args -p video_device:=IMX415`). The default resolution for F37 is 1920x1080, and for IMX415 it is 3840x2160.
 
-使用image_width和image_height参数设置发布图片的分辨率:
+Use the 'image_width' and 'image_height' parameters to set the resolution for publishing images:
 
 `ros2 run mipi_cam mipi_cam --ros-args --log-level info --ros-args -p image_width:=960 -p image_height:=540 -p video_device:=F37`
 
-使用out_format参数设置发布图片的编码方式，默认是bgr8编码方式，支持nv12格式（/image_raw topic），例如使用F37 sensor发布960x540分辨率的nv12格式图片：
+Use the 'out_format' parameter to set the encoding method for publishing images, default is 'bgr8'. Support is provided for the nv12 format (/image_raw topic). For example, to publish nv12 format images of 960x540 resolution using the F37 sensor:
 
-`ros2 run mipi_cam mipi_cam --ros-args --log-level info --ros-args -p out_format:=nv12 -p image_width:=960 -p image_height:=540 -p video_device:=F37`
+`ros2 run mipi_cam mipi_cam --ros-args --log-level info --ros-args -p out_format:=nv12 -p image_width:=960 -p image_height:=540 -p video_device:=F37`  Use the `io_method` parameter to set the way the image is published. Currently, the topic published by `shared_mem` is fixed as: `hbmem_img`.
 
-使用 io_method 参数设置发布图像采用的方式，目前 shared_mem 发布的主题是固定的：hbmem_img
-
-`ros2 run mipi_cam mipi_cam --ros-args -p io_method:=shared_mem`
-
-使用 camera_calibration_file_path 参数设置相机标定文件路径，此处以使用GC4663相机并读取config文件下的GC4663_calibration.yaml为例(打印信息见下方Attention)：
-
+```bash
+ros2 run mipi_cam mipi_cam --ros-args -p io_method:=shared_mem
 ```
-# config中为示例使用的相机标定文件，根据实际安装路径进行拷贝
+
+Set the camera calibration file path using the `camera_calibration_file_path` parameter. Here is an example using the GC4663 camera and reading the `GC4663_calibration.yaml` file under the `config` directory (see Attention below for print information):
+
+```bash
+# Copy the camera calibration file provided in the config as an example, copy according to the actual installation path
 cp -r install/lib/mipi_cam/config/ .
 ros2 run mipi_cam mipi_cam --ros-args -p camera_calibration_file_path:=./config/GC4663_calibration.yaml -p video_device:=GC4663
 ```
 
 ---
 
-## X3 linaro系统
+## X3 Linaro System
 
-把在docker 交叉编译的install 目录拷贝到linaro 系统下，例如:/userdata
-需要首先指定依赖库的路径，例如：
+Copy the `install` directory cross-compiled in Docker to the Linaro system, for example: `/userdata`. It is necessary to specify the path of the dependent library first, for example:
 `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/userdata/install/lib`
 
-
-修改 ROS_LOG_DIR 的路径，否则会创建在 /home 目录下，需要执行 mount -o remount,rw /，才可以在 /home 下创建日志
+Modify the path of `ROS_LOG_DIR`, otherwise it will be created under the `/home` directory. You need to execute `mount -o remount,rw /` to create logs under `/home`.
 `export ROS_LOG_DIR=/userdata/`
 
-运行 mipi_cam
-```
-// 默认参数方式
+Run the `mipi_cam` node:
+```bash
+// Default parameter mode
 /userdata/install/lib/mipi_cam/mipi_cam
-// 传参方式
+// Parameter mode
 #/userdata/install/lib/mipi_cam/mipi_cam --ros-args -p image_width:=960 -p image_height:=540
-
 ```
 
-运行方式2，使用launch文件启动：
+Run mode 2, use launch file to start:
 `ros2 launch install/share/mipi_cam/launch/mipi_cam.launch.py`
 
 # Attention
-目前设备出来的数据默认为nv12，转rgb8 格式，目前没有用cv，1920*1080 性能耗时 100ms 左右，压缩图需要用中继的方式支持：
+Currently, the data output from the device is in the nv12 format, needs conversion to rgb8 format. Currently not using OpenCV, performance time for 1920*1080 image is around 100ms, compressed images need to be supported in a relay manner:
+```bash
 ros2 run image_transport republish [in_transport] in:=<in_base_topic> [out_transport] out:=<out_base_topic>
-例如：
-ros2 run image_transport republish raw compressed --ros-args --remap in:=/image_raw --remap out/compressed:=/image_raw/compressed
-则会有 compressed 的话题，利用 sub 端可以订阅到压缩图片话题，例如：
+e.g.:
+ros2 run image_transport republish raw compressed --ros-args --remap in:=/image_raw --remap compressed:=/image_raw/compressed
+Then there will be a `compressed` topic, use the sub end to subscribe to the compressed image topic, for example:
 ros2 run image_subscribe_example subscribe_example --ros-args -p sub_img_topic:=/image_raw/compressed
-日志显示：
+Log display:
 ```
+```bash
 root@xj3ubuntu:/userdata/cc_ws/tros_ws# ros2 run image_subscribe_example subscribe_example --ros-args -p sub_img_topic:=/image_raw/compressed
 [WARN] [1648302887.615608845] [example]: This is image_subscriber example!
 [WARN] [1648302887.699318639] [ImageSubscriber]: Update sub_img_topic with topic_name: /image_raw/compressed
 [WARN] [1648302887.701353516] [ImageSubscriber]: Update save_dir: 
 [WARN] [1648302887.701502469] [ImageSubscriber]: Create subscription with topic_name: /image_raw/compressed
-[WARN] [1648302887.705133283] [example]: ImageSubscriber init!
+```[WARN] [1648302887.705133283] [example]: ImageSubscriber init!
 [WARN] [1648302887.706179033] [example]: ImageSubscriber add_node!
 [INFO] [1648302889.318928227] [img_sub]: Recv compressed img
 [WARN] [1648302889.319329711] [img_sub]: Sub compressed img fps = 1
 [INFO] [1648302889.319478247] [img_sub]: Recv compressed img: rgb8; jpeg compressed bgr8, stamp: 1648302889.92334955, tmlaps(ms): 227, data size: 33813
+
 ```
-注意：此项功能，需要安装 ros包 image_transport_plugins，利用命令：
+To enable this feature, it is necessary to install the ROS package image_transport_plugins using the following command:
 sudo apt-get install ros-foxy-image-transport-plugins
 
-
-若相机成功运行，正常读取相机标定文件，则会有以下信息输出。mipi_cam提供两种相机型号的标定文件，分别是GC4663和F37，默认是读取config文件下的F37_calibration.yaml。如使用GC4663摄像头，请更换相机标定文件的读取路径！
+If the camera runs successfully and reads the camera calibration file normally, the following information will be output. mipi_cam provides calibration files for two camera models, GC4663 and F37. By default, it reads the F37_calibration.yaml file in the config folder. If using the GC4663 camera, please change the path to read the camera calibration file!
 ```
+
 [INFO] [1661863164.454533227] [mipi_cam]: [get_image]->enc=bgr8,step=5760, w:h=1920:1080,sz=3110400,start 1544567->laps=102 ms.
 
 [INFO] [1661863164.458727776] [mipi_node]: publish camera info.
@@ -187,4 +188,3 @@ sudo apt-get install ros-foxy-image-transport-plugins
 [INFO] [1661863165.100916367] [mipi_cam]: [get_image]->enc=bgr8,step=5760, w:h=1920:1080,sz=3110400,start 1545214->laps=102 ms.
 
 [INFO] [1661863165.104211776] [mipi_node]: publish camera info.
-```

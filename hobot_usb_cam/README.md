@@ -1,55 +1,54 @@
+English| [简体中文](./README_cn.md)
+
 # Hobot_USB_CAM
 
-# 功能介绍
+# Function Introduction
 
-从USB摄像头获取图像数据并通过image/hbmem_image topic发布
+Obtain image data from USB camera and publish it through the image/hbmem_image topic.
 
-# 编译
+# Compilation
 
-## 依赖库
+## Dependency Libraries
 
-ros package：
+ROS package:
 
 - rclcpp
 - sensor_msgs
 - hbm_img_msgs
 - v4l-utils
 
-hbm_img_msgs为自定义消息格式，用于发布shared memory类型图像数据，定义在hobot_msgs中。
+hbm_img_msgs is a custom message format used to publish shared memory type image data, defined in hobot_msgs.
 
-## 开发环境
+## Development Environment
 
-- 编程语言: C/C++
-- 开发平台: X3/X86
-- 系统版本：Ubuntu 20.04
-- 编译工具链:Linux GCC 9.3.0/Linaro GCC 9.3.0
+- Programming Language: C/C++
+- Development Platform: X3/X86
+- System Version: Ubuntu 20.04
+- Compilation Toolchain: Linux GCC 9.3.0/Linaro GCC 9.3.0
 
-## 编译
+## Compilation
 
- 支持在X3/X86 Ubuntu系统上编译和在X86 Ubuntu上使用docker交叉编译两种方式。
+Supports compilation on X3/X86 Ubuntu system and cross-compilation using Docker on X86 Ubuntu.
 
-### X3/X86 Ubuntu编译
+### X3/X86 Ubuntu Compilation
 
-1. 编译环境确认 
-   - Ubuntu系统为Ubuntu 20.04。
-   - 当前编译终端已设置TogetherROS环境变量：`source PATH/setup.bash`。其中PATH为TogetherROS的安装路径。
-   - 已安装ROS2编译工具colcon，安装命令：`pip install -U colcon-common-extensions`
-2. 编译
+1. Compilation Environment Confirmation
+   - Ubuntu system is Ubuntu 20.04.
+   - The current compilation terminal has set TogetherROS environment variables: `source PATH/setup.bash`. Where PATH is the installation path of TogetherROS.
+   - ROS2 compilation tool `colcon` is installed, installation command: `pip install -U colcon-common-extensions`
 
-编译命令：`colcon build --packages-select hobot_usb_cam
-`
+2. Compilation
 
-### X86 Ubuntu Docker交叉编译
+Compilation command: `colcon build --packages-select hobot_usb_cam`
 
-1. 编译环境确认
+### X86 Ubuntu Docker Cross-Compilation
 
-   - 在docker中编译，并且docker中已经安装好TogetherROS。docker安装、交叉编译说明、TogetherROS编译和部署说明详见机器人开发平台robot_dev_config repo中的README.md。
+1. Compilation Environment Confirmation
+   - Compilation in Docker, and TogetherROS is already installed in Docker. For docker installation, cross-compilation instructions, TogetherROS compilation, and deployment instructions, please refer to the README.md in the robot development platform robot_dev_config repository.
 
-2. 编译
+2. Compilation
 
-   - 编译命令：
-
-```
+   - Compilation command:```
 export TARGET_ARCH=aarch64
 export TARGET_TRIPLE=aarch64-linux-gnu
 export CROSS_COMPILE=/usr/bin/$TARGET_TRIPLE-
@@ -65,42 +64,38 @@ colcon build --packages-select hobot_usb_cam \
       -DCMAKE_BUILD_RPATH="`pwd`/build/poco_vendor/poco_external_project_install/lib/;`pwd`/build/libyaml_vendor/libyaml_install/lib/"
 ```
 
-## 注意事项
+## Instructions
 
-# 使用介绍
+# Dependencies
 
-## 依赖
+Websocket receives image messages and intelligent results messages, matches them based on timestamps, and then outputs them for rendering on the web side. It can also display images separately.
 
-websocket接收图像消息和智能结果消息，根据时间戳进行匹配，然后输出给web端渲染显示，也可单独显示图像。
+Image messages support `sensor_msgs::msg::Image` and `shared_mem` type `hbm_img_msgs::msg::HbmMsg1080P` messages, which must be jpeg format data output by Hobot codec.
 
-图像消息支持`sensor_msgs::msg::Image`以及`shared_mem`的`hbm_img_msgs::msg::HbmMsg1080P`类型消息，必须为hobot codec输出的jpeg格式数据。
+Intelligent results messages support `ai_msgs::msg::PerceptionTargets` type messages. The `header.stamp` field must match the timestamp of the corresponding image message. Websocket uses this field for message matching, and the width and height of the intelligent results must match the resolution of the received image.
 
-智能结果消息支持`ai_msgs::msg::PerceptionTargets`类型消息，其中`header.stamp`必须和该结果对应的image消息相同，websocket会使用该字段进行消息匹配，还有智能结果对应的宽高必须要和接收到的图像分辨率一致。
+Packages that this depends on include:
 
-具体依赖的package有：
+- mipi_cam: Launches mipi cam and publishes nv12 type image messages.
+- hobot_codec: Encodes nv12 images published by mipi_cam into jpeg images required by Websocket.
+- mono2d_body_detection: Receives nv12 format data, performs algorithm inference, and publishes perception messages for human bodies, heads, faces, and hands.
 
-- mipi_cam：启动mipi cam，发布nv12类型图像消息
-- hobot_codec：将mipi_cam发布的nv12图像编码为websocket需要的jpeg格式图像
-- mono2d_body_detection：接收nv12格式数据，进行算法推理，发布人体、人头、人脸、人手框感知消息
+## Parameters
 
-## 参数
+| Parameter    | Explanation         | Type    | Supported Configurations   | Required | Default Value       |
+| ------------ | ------------------- | ------- | ---------------------------| -------- | ------------------- |
+| frame_id     | Message identifier  | string  | Set frame_id name as needed | No      | "default_usb_cam"  |
+| framerate    | Frame rate          | int     | Choose based on sensor support | No    | 30                  |
+| image_height | Image height        | int     | Choose based on sensor support | No    | 640                 |
+| image_width  | Image width         | int     | Choose based on sensor support | No    | 480                 |
+| io_method    | IO method           | string  | mmap/read/userptr           | No      | "mmap"              |
+| pixel_format | Pixel format        | string  | Currently only supports mjpeg | No      | "mjpeg"             |
+| video_device | Device driver name  | string  | Device name usually /dev/videox | Yes     | "/dev/video0"       |
+| zero_copy    | Enable "zero_copy"  | bool    | True/False                  | No      | "True"              |
+| camera_calibration_file_path  | Path to camera calibration file | string | Configure according to the actual path of the camera calibration file | No | Empty |
+```## Running
 
-| 参数名      | 解释             | 类型   | 支持的配置                 | 是否必须 | 默认值             |
-| ------------| -----------------| -------| --------------------------| -------- | -------------------|
-| frame_id    | 消息标志符       | string | 根据需要设置frame_id名字   | 否       | "default_usb_cam"  |
-| framerate   | 帧率             | int    | 根据sensor支持选择         | 否       | 30                 |
-| image_height| 图像高方向分辨率 | int    | 根据sensor支持选择         | 否       | 640                |
-| image_width | 图像宽方向分辨率 | int    | 根据sensor支持选择         | 否        | 480               |
-| io_method   | io类型           | string | mmap/read/userptr          | 否       | “mmap”            |
-| pixel_format| 像素格式         | string | 当前只支持mjpeg            | 否        | “mjpeg”           |
-| video_device| 设备驱动名称     | string | 设备名称一般为/dev/videox  | 是        | “/dev/video0”     |
-| zero_copy   | 使能“zero_copy”  | bool   | True/False                 | 否       | “True”           |
-| camera_calibration_file_path  | 相机标定文件的存放路径  | string   | 根据实际的相机标定文件存放路径配置   | 否  | 空 |
-
-
-## 运行
-
-编译成功后，将生成的install路径拷贝到地平线X3开发板上（如果是在X3/X86 Ubuntu上编译，忽略拷贝步骤），并执行如下命令运行：
+After the compilation is successful, copy the generated install path to the Horizon X3 development board (ignore the copying steps if compiling on X3/X86 Ubuntu), and execute the following commands to run:
 
 ### **X3/X86 Ubuntu**
 
@@ -111,16 +106,17 @@ export COLCON_CURRENT_PREFIX=./install
 source ./install/setup.bash
 ~~~
 
-使用launch运行hobot_usb_cam
+Run hobot_usb_cam using launch
 ~~~shell
-ros2 launch  hobot_usb_cam hobot_usb_cam.launch.py
+ros2 launch hobot_usb_cam hobot_usb_cam.launch.py
 ~~~
-使用命令运行hobot_usb_cam
+Run hobot_usb_cam using command
 ~~~shell
 ros2 run hobot_usb_cam hobot_usb_cam --ros-args --log-level info --ros-args -p video_device:="/dev/video8"
 ~~~
 
-注意：video_device参数需要根据实际情况配置
+Note: The video_device parameter needs to be configured according to the actual situation
+
 ### **Linux**
 
 ```shell
@@ -130,26 +126,19 @@ export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:./install/lib/
 ./install/lib/hobot_usb_cam/hobot_usb_cam --ros-args --log-level info --ros-args -p video_device:="/dev/video8"
 ```
 
-## 注意事项
+## Attention
 
-目前使用“zero-copy”仅支持1920*1080、960*540、640*480三种分辨率图像，如果需要使用其他分辨率，需要自行创建对应的ros message
+Currently, using "zero-copy" only supports three resolution images: 1920*1080, 960*540, and 640*480. If you need to use other resolutions, you need to create corresponding ROS messages by yourself.
 
-当配置的分辨率硬件不支持时，会自动选择接近的分辨率进行图像获取
+When the configured resolution is not supported by the hardware, the nearest resolution will be automatically selected for image acquisition.
 
-hobot_usb_cam没有默认的标定文件，可使用参数camera_calibration_file_path指定。相机内参发布话题名:/camera_info
+hobot_usb_cam does not have a default calibration file, you can specify it using the parameter camera_calibration_file_path. Camera intrinsic parameter topic name: /camera_info
 
-# 结果分析
+# Result Analysis
 
-## 结果展示
+## Result Display
 
-若未指定相机标定文件，会出现无法发布相机信息的警告，但不影响图片消息的发布
-```
-root@ubuntu:~# ros2 run hobot_usb_cam hobot_usb_cam --ros-args --log-level info --ros-args -p video_device:="/dev/video8"
-
-[ERROR] [1661872247.616929290] [hobot_usb_cam]: Camera calibration file:  not exist!
-[WARN] [1661872247.617759426] [hobot_usb_cam]: get camera calibration parameters failed
-
-[INFO] [1661864867.688989561] [hobot_usb_cam]: Set resolution to 640x480
+If the camera calibration file is not specified, a warning message indicating the failure to publish camera information will appear, but it does not affect the publishing of image messages.[INFO] [1661864867.688989561] [hobot_usb_cam]: Set resolution to 640x480
 
 [INFO] [1661864867.718194946] [hobot_usb_cam]: Set framerate to be 30
 
@@ -176,8 +165,9 @@ root@ubuntu:~# ros2 run hobot_usb_cam hobot_usb_cam --ros-args --log-level info 
 [WARN] [1661864868.117489411] [hobot_usb_cam]: Unable to publish camera info.
 
 ```
-若指定相机标定参数路径，相机运行成功并正常获取相机标定文件，则输出以下信息
+If the camera calibration parameter path is specified, the camera runs successfully and obtains the camera calibration file normally, the following information will be output
 ```
+
 [INFO] [1661865235.667735376] [hobot_usb_cam]: [get_cam_calibration]->parse calibration file successfully
 [INFO] [1661865235.925195867] [hobot_usb_cam]: Set resolution to 640x480
 
@@ -197,8 +187,4 @@ root@ubuntu:~# ros2 run hobot_usb_cam hobot_usb_cam --ros-args --log-level info 
 
 [INFO] [1661865236.285348631] [hobot_usb_cam]: publish camera info.
 
-[INFO] [1661865236.285770625] [hobot_usb_cam]: publish image 640x480 encoding:2 size:83430
-
-```
-
-# 常见问题
+[INFO] [1661865236.285770625] [hobot_usb_cam]: publish image 640x480 encoding:2 size:83430# Frequently Asked Questions
